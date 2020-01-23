@@ -1,5 +1,3 @@
-#!/bin/sh
-
 parse_args () {
   while [ "${1}" != "" ]
   do
@@ -33,11 +31,11 @@ does_command_exist () {
       else
         echo "$2 was found. Using $2..."
         sleep 1
-        alias $1=$2
+        eval "$1='$(which $2)'"
       fi
     else
       echo "$1 is not installed. It must be installed and added to your \$PATH"
-      sleep1
+      sleep 1
       cleanup
     fi
   fi
@@ -46,9 +44,9 @@ does_command_exist () {
 check_version () {
   if [ "$2" != "" ]; then
     if echo $2 $3 | awk '{ exit ($1 >= $2) }'; then
-      if [ "$force_install" == "true" ]; then
+      if [[ "$force_install" == "true" && "$1" != "python" ]]; then
         echo "Installing $1-$3"
-        pip install $proxy_arg $1==$3
+        $pip install -q $proxy_arg numpy==1.13.3 scikit-image==0.13.1
       else
         echo "$1 of at least version $3 is needed. $2 is currently installed."
         sleep 1
@@ -56,9 +54,9 @@ check_version () {
       fi
     fi
   else
-    if [ "$force_install" == "true" ]; then
+    if [[ "$force_install" == "true" && "$1" != "python" ]]; then
       echo "Installing $1-$3"
-      pip install $proxy_arg $1==$3
+      $pip install -q $proxy_arg numpy==1.13.3 scikit-image==0.13.1
     else
       echo "$1 version could not be found. Check if it is installed."
       echo "pip install $1 OR pip3 install $1"
@@ -119,8 +117,8 @@ does_command_exist python3
 does_command_exist pip pip3
 check_version python "`python3 -c 'import sys; print(sys.version)' | awk 'NR==1' | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`" 3.6
 
-# Check for Numpy 1.13
-check_version numpy "`python3 -c 'import numpy; print(numpy.__version__)' 2>/dev/null | awk 'NR==1' | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`" 1.13
+# Check for Numpy 1.13.3
+check_version numpy "`python3 -c 'import numpy; print(numpy.__version__)' 2>/dev/null | awk 'NR==1' | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`" 1.13.3
 
 # Check for SciKit-Image 0.13.1
 check_version scikit-image "`python3 -c 'import skimage; print(skimage.__version__)' 2>/dev/null | awk 'NR==1' | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+).*/\1/g'`" 0.13.1
